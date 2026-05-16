@@ -1,0 +1,12 @@
+/* Editor-facing styles injected into the Gutenberg editor iframe. */
+/* Import main Tailwind output so the editor mirrors the frontend. */
+@import './main.css';
+
+/* ─── Editor-specific overrides ─────────────────────────────────────────── */
+.editor-styles-wrapper {
+  font-family: inherit;
+}
+
+.editor-styles-wrapper .wp-block {
+  max-width: none;
+}

@@ -1,0 +1,50 @@
+# WordPress core (never commit wp-core)
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/xmlrpc.php
+/license.txt
+/readme.html
+/wp-content/uploads/
+/wp-content/upgrade/
+/wp-content/backup-db/
+/wp-content/advanced-cache.php
+/wp-content/wp-cache-config.php
+/wp-content/cache/
+/wp-content/blogs.dir/
+
+# WordPress config (keep wp-config-sample.php, not wp-config.php)
+wp-config.php
+
+# Theme build artifacts
+/node_modules/
+/vendor/
+/assets/css/
+/assets/js/
+*.map
+
+# npm / package manager
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# SpinupWP deploy scripts (keep these tracked)
+# .deploy/
