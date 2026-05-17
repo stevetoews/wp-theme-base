@@ -1,51 +1,52 @@
-name: Verify deploy secrets
-  run: |
-    test -n "${{ secrets.STAGING_HOST }}" || (echo "Missing STAGING_HOST secret" && exit 1)
-    test -n "${{ secrets.STAGING_SSH_USER }}" || (echo "Missing STAGING_SSH_USER secret" && exit 1)
-    test -n "${{ secrets.STAGING_SSH_PRIVATE_KEY }}" || (echo "Missing STAGING_SSH_PRIVATE_KEY secret" && exit 1)
+name: Deploy to Staging
 
-name: Setup SSH
-  run: |
-    mkdir -p ~/.ssh
-    chmod 700 ~/.ssh
+on:
+  push:
+    branches:
+      - main
 
-    printf '%s\n' "${{ secrets.STAGING_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-    chmod 600 ~/.ssh/deploy_key
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-    ssh-keyscan -H "${{ secrets.STAGING_HOST }}" >> ~/.ssh/known_hosts
-    chmod 644 ~/.ssh/known_hosts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4e
 
-name: Test SSH connection
-  run: |
-    ssh \
-      -i ~/.ssh/deploy_key \
-      -o IdentitiesOnly=yes \
-      -o StrictHostKeyChecking=yes \
-      -o BatchMode=yes \
-      "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}" \
-      "whoami && hostname && pwd"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-name: Deploy theme via rsync
-  run: |
-    THEME_DIR="/sites/staging.treethink.net/files/wp-content/themes/wp-theme-base"
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run build
 
-    rsync -azv --delete \
-      --exclude='.git' \
-      --exclude='node_modules' \
-      --exclude='.github' \
-      --exclude='.DS_Store' \
-      --exclude='*.md' \
-      --exclude='package-lock.json' \
-      --exclude='package.json' \
-      --exclude='src' \
-      -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
-      ./ "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}:${THEME_DIR}/"
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-name: Activate theme via WP-CLI
-  run: |
-    ssh \
-      -i ~/.ssh/deploy_key \
-      -o IdentitiesOnly=yes \
-      -o StrictHostKeyChecking=yes \
-      "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}" \
-      "wp --path=/sites/staging.treethink.net/files theme activate wp-theme-base"
+      - name: Deploy theme via rsync
+        run: |
+          THEME_DIR="/sites/staging.treethink.net/files/wp-content/themes/wp-theme-base"
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.github' \
+            --exclude='*.md' \
+            --rsync-path="sudo -u staging rsync" \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            ./ ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}:${THEME_DIR}/
+
+      - name: Activate theme via WP-CLI
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST } \
+            "wp --path=/sites/staging.treethink.net/files theme activate wp-theme-base"
