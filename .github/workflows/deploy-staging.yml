@@ -48,7 +48,7 @@ jobs:
 
       - name: Activate theme via WP-CLI
         run: |
-          ssh
+          ssh \
             -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
