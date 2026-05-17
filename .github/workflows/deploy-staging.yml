@@ -24,7 +24,7 @@ jobs:
           npm ci
           npm run build
 
-      - name: Setup SSH key
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.STAGING_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
@@ -37,12 +37,14 @@ jobs:
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.github' \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./ staging@${{ secrets.STAGING_HOST }}:/var/www/staging.treethink.net/htdocs/wp-content/themes/wp-theme-base/
+            --exclude='*.md' \
+            -e "ssh -i ~/.ssh/deploy_key -p 22 -o StrictHostKeyChecking=no" \
+            ./ staging@${{ secrets.STAGING_HOST }}:/sites/staging.treethink.net/wp-content/themes/wp-theme-base/
 
-      - name: Activate theme (first deploy only)
+      - name: Activate theme via WP-CLI
         run: |
           ssh -i ~/.ssh/deploy_key \
+            -p 22 \
             -o StrictHostKeyChecking=no \
             staging@${{ secrets.STAGING_HOST }} \
-            'wp --path=/var/www/staging.treethink.net/htdocs theme activate wp-theme-base 2>/dev/null || true'
+            'wp --path=/sites/staging.treethink.net theme activate wp-theme-base --allow-root 2>/dev/null || true'
