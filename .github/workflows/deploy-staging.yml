@@ -1,10 +1,10 @@
-- name: Verify deploy secrets
+name: Verify deploy secrets
   run: |
     test -n "${{ secrets.STAGING_HOST }}" || (echo "Missing STAGING_HOST secret" && exit 1)
     test -n "${{ secrets.STAGING_SSH_USER }}" || (echo "Missing STAGING_SSH_USER secret" && exit 1)
     test -n "${{ secrets.STAGING_SSH_PRIVATE_KEY }}" || (echo "Missing STAGING_SSH_PRIVATE_KEY secret" && exit 1)
 
-- name: Setup SSH
+name: Setup SSH
   run: |
     mkdir -p ~/.ssh
     chmod 700 ~/.ssh
@@ -15,7 +15,7 @@
     ssh-keyscan -H "${{ secrets.STAGING_HOST }}" >> ~/.ssh/known_hosts
     chmod 644 ~/.ssh/known_hosts
 
-- name: Test SSH connection
+name: Test SSH connection
   run: |
     ssh \
       -i ~/.ssh/deploy_key \
@@ -25,7 +25,7 @@
       "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}" \
       "whoami && hostname && pwd"
 
-- name: Deploy theme via rsync
+name: Deploy theme via rsync
   run: |
     THEME_DIR="/sites/staging.treethink.net/files/wp-content/themes/wp-theme-base"
 
@@ -41,7 +41,7 @@
       -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
       ./ "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}:${THEME_DIR}/"
 
-- name: Activate theme via WP-CLI
+name: Activate theme via WP-CLI
   run: |
     ssh \
       -i ~/.ssh/deploy_key \
