@@ -31,30 +31,21 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Locate WordPress install on server
-        id: find-wp
-        run: |
-          WP_ROOT=$(ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            staging@${{ secrets.STAGING_HOST }} \
-            'find /sites/staging.treethink.net -name "wp-config.php" -maxdepth 4 2>/dev/null | head -1 | xargs dirname 2>/dev/null')
-          echo "wp_root=$WP_ROOT" >> $GITHUB_OUTPUT
-          echo "Detected WP root: $WP_ROOT"
-
       - name: Deploy theme via rsync
         run: |
-          THEME_DIR="${{ steps.find-wp.outputs.wp_root }}/wp-content/themes/wp-theme-base"
-          echo "Deploying to: $THEME_DIR"
+          THEME_DIR="/sites/staging.treethink.net/files/wp-content/themes/wp-theme-base"
           rsync -az --delete \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.github' \
             --exclude='*.md' \
+            --rsync-path="sudo -u staging rsync" \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./ staging@${{ secrets.STAGING_HOST }}:${THEME_DIR}/
+            ./ spinupwp@${{ secrets.STAGING_HOST }}:${THEME_DIR}/
 
       - name: Activate theme via WP-CLI
         run: |
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
-            staging@${{ secrets.STAGING_HOST }} \
-            "wp --path=${{ steps.find-wp.outputs.wp_root }} theme activate wp-theme-base 2>/dev/null || true"
+            spinupwp@${{ secrets.STAGING_HOST }} \
+            "sudo -u staging wp --path=/sites/staging.treethink.net/files theme activate wp-theme-base 2>/dev/null || true"
