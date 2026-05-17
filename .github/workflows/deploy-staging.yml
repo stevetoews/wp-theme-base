@@ -34,19 +34,23 @@ jobs:
       - name: Deploy theme via rsync
         run: |
           THEME_DIR="/sites/staging.treethink.net/files/wp-content/themes/wp-theme-base"
-          rsync -az --delete \
+          rsync -azv --delete \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.github' \
+            --exclude='.DS_Store' \
             --exclude='*.md' \
-            --rsync-path="sudo -u staging rsync" \
+            --exclude='package-lock.json' \
+            --exclude='package.json' \
+            --exclude='src' \
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
-            ./ ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}:${THEME_DIR}/
+            ./ "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}:${THEME_DIR}/"
 
       - name: Activate theme via WP-CLI
         run: |
-          ssh -i ~/.ssh/deploy_key \
+          ssh
+            -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
-            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }} \
+            "${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }}" \
             "wp --path=/sites/staging.treethink.net/files theme activate wp-theme-base"
