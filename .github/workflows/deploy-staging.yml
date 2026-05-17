@@ -48,5 +48,5 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
-            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST } \
+            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_HOST }} \
             "wp --path=/sites/staging.treethink.net/files theme activate wp-theme-base"
