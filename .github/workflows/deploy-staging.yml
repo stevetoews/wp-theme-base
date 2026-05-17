@@ -40,8 +40,8 @@ jobs:
             --exclude='.github' \
             --exclude='*.md' \
             --rsync-path="sudo -u staging rsync" \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./ spinupwp@${{ secrets.STAGING_HOST }}:${THEME_DIR}/
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes StrictHostKeyChecking=yes" \
+            ./ staging@${{ secrets.STAGING_HOST }}:${THEME_DIR}/
 
       - name: Activate theme via WP-CLI
         run: |
